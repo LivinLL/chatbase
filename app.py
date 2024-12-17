@@ -20,7 +20,7 @@ index = pc.Index(PINECONE_INDEX_NAME)
 openai.api_key = OPENAI_API_KEY
 
 # Max characters to keep for each Pinecone chunk
-MAX_CHUNK_LENGTH = 500  # Adjust based on what makes sense for your app
+MAX_CHUNK_LENGTH = 2000  # Adjust based on what makes sense for your app
 
 # Flask HTML Template
 HTML_TEMPLATE = """
