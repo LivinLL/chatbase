@@ -19,24 +19,155 @@ index = pc.Index(PINECONE_INDEX_NAME)
 # OpenAI setup
 openai.api_key = OPENAI_API_KEY
 
-# Flask HTML Template
+# Flask HTML Template with responsive design and spinner
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Agent</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask d-A-v-I-d about LLU Stuff</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #2e6da4;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label, input {
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #2e6da4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #22597e;
+        }
+
+        /* Spinner styling */
+        #loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #loading img {
+            width: 50px;
+        }
+
+        /* Spinner for larger screens */
+        @media (min-width: 768px) {
+            #loading img {
+                width: 70px;
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 767px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            input[type="text"] {
+                font-size: 14px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Ask Our AI Agent</h1>
-    <form method="POST">
-        <label for="user_question">Your Question:</label><br>
-        <input type="text" id="user_question" name="user_question" size="50" required><br><br>
-        <button type="submit">Submit</button>
-    </form>
-    {% if response %}
-    <h2>Response:</h2>
-    <p>{{ response }}</p>
-    {% endif %}
+    <div class="container">
+        <h1>Ask d-A-v-I-d about LLU Stuff</h1>
+        <form method="POST" id="questionForm">
+            <label for="user_question">Your Question:</label><br>
+            <input type="text" id="user_question" name="user_question" size="50" required><br><br>
+            <button type="submit" id="submitButton">Ask d-A-v-I-d</button>
+        </form>
+
+        <!-- Loading Spinner -->
+        <div id="loading">
+            <img src="https://i.gifer.com/4V0b.gif" alt="Loading..." />
+        </div>
+
+        {% if response %}
+        <h2>d-A-v-I-d Says:</h2>
+        <p>{{ response }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        const form = document.getElementById('questionForm');
+        const submitButton = document.getElementById('submitButton');
+        const loadingSpinner = document.getElementById('loading');
+
+        form.onsubmit = function(event) {
+            event.preventDefault();  // Prevent default form submission
+
+            // Show the loading spinner
+            loadingSpinner.style.display = "block";
+            submitButton.disabled = true;  // Disable the button
+
+            // Submit the form using AJAX or let Flask handle the POST
+            form.submit();
+        };
+    </script>
 </body>
 </html>
 """
