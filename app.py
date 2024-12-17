@@ -136,6 +136,8 @@ HTML_TEMPLATE = """
         @media (max-width: 767px) {
             .container {
                 padding: 15px;
+                margin: 0 30px; /* Adds margin to the left and right */
+
             }
 
             h1 {
