@@ -19,7 +19,10 @@ index = pc.Index(PINECONE_INDEX_NAME)
 # OpenAI setup
 openai.api_key = OPENAI_API_KEY
 
-# Flask HTML Template with updated UI
+# Max characters to keep for each Pinecone chunk
+MAX_CHUNK_LENGTH = 500  # Adjust based on what makes sense for your app
+
+# Flask HTML Template
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -188,7 +191,7 @@ HTML_TEMPLATE = """
             loadingOverlay.style.display = 'block';
             submitButton.disabled = true;  // Disable the button
 
-            // Submit the form using AJAX or let Flask handle the POST
+            // Submit the form using Flask's POST request
             form.submit();
         };
     </script>
@@ -196,7 +199,8 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Query Pinecone and generate GPT-4 response
+# Query Pinecone and generate GPT-3.5 response
+# Query Pinecone and generate GPT-3.5 response
 def query_pinecone_and_generate_response(user_query):
     # Load the system prompt from a file
     with open("prompt.txt", "r") as file:
@@ -208,24 +212,40 @@ def query_pinecone_and_generate_response(user_query):
 
     # Query Pinecone for the top 3 most similar chunks
     search_results = index.query(vector=query_embedding, top_k=3, include_metadata=True)
-    relevant_chunks = [match.metadata['text'] for match in search_results['matches']]
+    
+    # Truncate long Pinecone results to avoid sending excessive tokens
+    relevant_chunks = [match.metadata['text'][:MAX_CHUNK_LENGTH] for match in search_results['matches']]
 
-    # Combine chunks into context for GPT-4
-    context = "\n\n".join(relevant_chunks)
+    # If the results are still too long, summarize them using GPT-3.5 (optional)
+    if len(relevant_chunks) > 0 and len("".join(relevant_chunks)) > 1000:
+        # Summarize the chunks
+        summary_prompt = "Summarize the following text:\n" + "".join(relevant_chunks)
+        summary_response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": "You are a helpful assistant."},
+                      {"role": "user", "content": summary_prompt}]
+        )
+        summarized_text = summary_response.choices[0].message.content
+        context = summarized_text
+    else:
+        context = "\n\n".join(relevant_chunks)
+
+    # Combine context with user query and the system prompt for a full request
     full_prompt = f"{system_prompt}\n\n### Context:\n{context}\n\nQuestion: {user_query}\nAnswer:"
 
-    # Generate GPT-4 response
+    # Log the full prompt to the console for inspection
+    print("Full Prompt Sent to OpenAI:")
+    print(full_prompt)  # This will print the full prompt in the console
+
+    # Generate GPT-3.5 response
     gpt_response = openai.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": full_prompt}
-        ]
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": system_prompt},
+                  {"role": "user", "content": full_prompt}]
     )
 
-    # Return the GPT-4 response
+    # Return the GPT-3.5 response
     return gpt_response.choices[0].message.content
-
 
 # Flask route
 @app.route("/", methods=["GET", "POST"])
@@ -238,6 +258,5 @@ def home():
 
 # Production-ready app run
 if __name__ == "__main__":
-    # Render will pass the PORT environment variable; use it or default to 5000 for local
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
