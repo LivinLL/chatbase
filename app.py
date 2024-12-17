@@ -19,7 +19,7 @@ index = pc.Index(PINECONE_INDEX_NAME)
 # OpenAI setup
 openai.api_key = OPENAI_API_KEY
 
-# Flask HTML Template with responsive design and spinner
+# Flask HTML Template with updated UI
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -61,6 +61,7 @@ HTML_TEMPLATE = """
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 0 15px; /* Padding on mobile */
         }
 
         label, input {
@@ -91,24 +92,41 @@ HTML_TEMPLATE = """
             background-color: #22597e;
         }
 
-        /* Spinner styling */
-        #loading {
+        /* Spinner styles */
+        #loading-spinner {
             display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        #loading img {
+            margin: 20px auto;
             width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        /* Spinner for larger screens */
-        @media (min-width: 768px) {
-            #loading img {
-                width: 70px;
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
             }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Center spinner */
+        #loading-container {
+            text-align: center;
+        }
+
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
+            z-index: 500; /* Ensure it is on top */
         }
 
         /* Responsive design */
@@ -141,13 +159,15 @@ HTML_TEMPLATE = """
             <button type="submit" id="submitButton">Ask d-A-v-I-d</button>
         </form>
 
-        <!-- Loading Spinner -->
-        <div id="loading">
-            <img src="https://i.gifer.com/4V0b.gif" alt="Loading..." />
+        <!-- Loading Spinner and Overlay -->
+        <div id="loading-container">
+            <div id="loading-spinner"></div>
+            <p id="loading-text" style="display: none;">d-A-v-I-d is thinking...</p>
         </div>
+        <div id="loading-overlay"></div>
 
         {% if response %}
-        <h2>d-A-v-I-d Says:</h2>
+        <h2>d-A-v-I-d says:</h2>
         <p>{{ response }}</p>
         {% endif %}
     </div>
@@ -155,13 +175,17 @@ HTML_TEMPLATE = """
     <script>
         const form = document.getElementById('questionForm');
         const submitButton = document.getElementById('submitButton');
-        const loadingSpinner = document.getElementById('loading');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
 
         form.onsubmit = function(event) {
             event.preventDefault();  // Prevent default form submission
 
-            // Show the loading spinner
-            loadingSpinner.style.display = "block";
+            // Show the loading spinner and overlay
+            loadingSpinner.style.display = 'block';
+            loadingText.style.display = 'block';
+            loadingOverlay.style.display = 'block';
             submitButton.disabled = true;  // Disable the button
 
             // Submit the form using AJAX or let Flask handle the POST
